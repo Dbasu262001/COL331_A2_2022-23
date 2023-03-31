@@ -24,6 +24,12 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 
+int 	sched_policy(int , int );
+int 	exec_time(int , int );
+int 	deadline(int , int );
+int 	rate(int , int );
+
+
 // ulib.c
 int stat(const char*, struct stat*);
 char* strcpy(char*, const char*);

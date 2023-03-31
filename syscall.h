@@ -20,3 +20,7 @@
 #define SYS_link   19
 #define SYS_mkdir  20
 #define SYS_close  21
+#define SYS_sched_policy 22
+#define SYS_exec_time    23
+#define SYS_deadline     24
+#define SYS_rate         25

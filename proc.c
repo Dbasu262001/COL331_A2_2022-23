@@ -18,6 +18,13 @@ int nextpid = 1;
 extern void forkret(void);
 extern void trapret(void);
 
+//EDF struct
+struct EDF_process_list {
+	struct proc  *Current;
+	struct EDF_process_list   *next;
+	int process_id;
+}
+
 static void wakeup1(void *chan);
 
 void
