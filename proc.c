@@ -6,7 +6,14 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
-extern uint ticks;
+
+//EDF struct
+struct process_list {
+	struct EDF_process_list   *next;
+	struct EDF_process_list   *prev;
+	int process_id;
+}
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -18,12 +25,6 @@ int nextpid = 1;
 extern void forkret(void);
 extern void trapret(void);
 
-//EDF struct
-struct EDF_process_list {
-	struct EDF_process_list   *next;
-	struct EDF_process_list   *prev;
-	int process_id;
-}
 
 static void wakeup1(void *chan);
 
@@ -326,27 +327,6 @@ wait(void)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
-void EDF_Scheduler(void){
-	struct proc *p;
-  	struct cpu *c = mycpu();
-  	c->proc = 0;
-  
-	for(;;){
-	sti();
-	acquire(&ptable.lock);
-	for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      		if(p->state != RUNNABLE || p->policy !=0)
-        		continue;
-	
-	
-	
-	
-	
-	}
-
- 	return ;
-}
-
 
 void
 scheduler(void)
@@ -561,3 +541,82 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+process_list  *edf_list;
+int edf_list_count;
+
+///Setting sched_policy
+int sched_policy(int pid,int policy){
+	struct proc *p;
+	p = ptable.proc[pid];
+	if(p == NULL){
+		return -22;
+	}
+	p->sched_policy = policy;
+	if(policy==0){
+		return edf_schedulability(void);
+	}else{
+		return rms_schedulability(void);
+	}	
+}
+
+//Setting exec_time
+int exec_time(int pid,int exec_time){
+	struct proc *p;
+	p = ptable.proc[pid];
+	if(p == NULL){
+		return -22;
+	}
+	p->exec_time = exec_time;
+	return 0;
+}
+
+//Setting deadline
+int deadline(int pid,int deadline){
+	struct proc *p;
+	p = ptable.proc[pid];
+	if(p == NULL){
+		return -22;
+	}
+	p->deadline = deadline;
+	return 0;
+}
+
+
+void EDF_Scheduler(void){
+	struct proc *p;
+  	struct cpu *c = mycpu();
+  	c->proc = 0;
+  
+	for(;;){
+	sti();
+	acquire(&ptable.lock);
+	for(p = ptable.proc[0]; p < &ptable.proc[NPROC]; p++){
+      		if(p->state != RUNNABLE || p->policy !=0)
+        		continue;	
+	
+	}
+
+ 	return ;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
