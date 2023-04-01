@@ -51,6 +51,8 @@ trap(struct trapframe *tf)
     if(cpuid() == 0){
       acquire(&tickslock);
       ticks++;
+      //Adding the time it has executed.
+      myproc()->elapsed_time++;
       wakeup(&ticks);
       release(&tickslock);
     }
