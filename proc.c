@@ -541,9 +541,7 @@ procdump(void)
     cprintf("\n");
   }
 }
-
-process_list  *edf_list;
-int edf_list_count;
+//MY implementation of this file
 
 ///Setting sched_policy
 int sched_policy(int pid,int policy){
@@ -582,6 +580,37 @@ int deadline(int pid,int deadline){
 	return 0;
 }
 
+//Setting rate for rms Scheduler
+int rate(int pid,int rate){
+	struct proc *p;
+	p = ptable.proc[pid];
+	if(p == NULL){
+		return -22;
+	}
+	p->rate = rate;
+	return 0;
+}
+
+process_list  *edf_list;
+int edf_list_count;
+
+//edf schedulabilty test
+int edf_schedulability(void){
+
+
+
+	return 0;
+}
+
+
+//RMS Schedulability test
+int rms_schedulability(void){
+
+
+
+	return 0;
+}
+
 
 void EDF_Scheduler(void){
 	struct proc *p;
@@ -600,6 +629,14 @@ void EDF_Scheduler(void){
  	return ;
 }
 
+
+void RMS_Scheduler(void){
+
+
+
+
+	return;
+}
 
 
 

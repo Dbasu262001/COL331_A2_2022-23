@@ -56,6 +56,8 @@ struct proc {
   int deadline;
   int elapsed_time = 0;
   int sched_policy = -1;
+  //For RMS
+  int rate;
 };
 
 // Process memory is laid out contiguously, low addresses first:
