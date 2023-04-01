@@ -6,7 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
-
+extern uint ticks;
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -20,8 +20,8 @@ extern void trapret(void);
 
 //EDF struct
 struct EDF_process_list {
-	struct proc  *Current;
 	struct EDF_process_list   *next;
+	struct EDF_process_list   *prev;
 	int process_id;
 }
 
@@ -326,6 +326,28 @@ wait(void)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
+void EDF_Scheduler(void){
+	struct proc *p;
+  	struct cpu *c = mycpu();
+  	c->proc = 0;
+  
+	for(;;){
+	sti();
+	acquire(&ptable.lock);
+	for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      		if(p->state != RUNNABLE || p->policy !=0)
+        		continue;
+	
+	
+	
+	
+	
+	}
+
+ 	return ;
+}
+
+
 void
 scheduler(void)
 {

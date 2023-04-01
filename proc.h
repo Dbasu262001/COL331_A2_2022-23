@@ -52,9 +52,10 @@ struct proc {
   
   
   //Added attributes  
-  int p_exec_time;
-  int p_deadline;
-  int p_policy = 3;
+  int exec_time;
+  int deadline;
+  int elapsed_time = 0;
+  int sched_policy = -1;
 };
 
 // Process memory is laid out contiguously, low addresses first:
