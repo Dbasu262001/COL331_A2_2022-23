@@ -613,7 +613,7 @@ int edf_schedulability(void){
 
 
 //RMS Schedulability test
-/*
+
 int rms_schedulability(void){
        struct proc *p;
        int n=0;
@@ -632,7 +632,6 @@ int rms_schedulability(void){
 
 	return 0;
 }
-*/
 
 void EDF_Scheduler(void){
 	struct proc *p;
