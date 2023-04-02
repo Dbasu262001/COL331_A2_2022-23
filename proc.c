@@ -588,6 +588,7 @@ int rate(int pid,int rate){
 		return -22;
 	}
 	p->rate = rate;
+	
 	return 0;
 }
 
@@ -605,7 +606,19 @@ int edf_schedulability(void){
 
 //RMS Schedulability test
 int rms_schedulability(void){
-
+       struct proc *p;
+       int n=0;
+       float u=0.0;
+  acquire(&ptable.lock);
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->sched_policy == 1){
+      u+=(float)p->exec_time/p->deadline;
+      n++;
+    }
+  }
+  release(&ptable.lock);
+	float ut=((float)n)*(pow(2.0,1/(double)n)-1.0);
+	if(u>ut) return -22; 
 
 
 	return 0;
@@ -631,8 +644,40 @@ void EDF_Scheduler(void){
 
 
 void RMS_Scheduler(void){
-
-
+      struct proc *hP;
+  struct cpu *c = mycpu();
+  c->proc = 0;
+  acquire(&ptable.lock);
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+          if(p->state != RUNNABLE || p->sched_policy !=1)
+        		continue;
+	  hP=p;
+	  for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++){
+		  if (p1->state!=RUNNABLE || p1->sched_policy!=1)
+			  continue;
+		  int weight_p1=(int)ceil(((30-p1->rate)*3)/29);
+		  int priority_p1;
+		  if (weight_p1<1) priority_p1=1;
+		  else priority_p1=weight_p1;
+		  int weight_hp=(int)ceil(((30 - hP->rate)*3)/29);
+		  int priority_hp;
+		  if (weight_hp<1) priority_hp=1;
+		  else priority_hp=weight_hp;
+		  if (priority_hp>priority_p1)
+			  hP=p1;
+		  
+	  }
+	  p=hP;
+	  c->proc=p;
+	  switchuvm(p);
+	  p->state=RUNNING;
+	  
+	  swtch(&(c->scheduler), p->context);
+          switchkvm();
+          c->proc=0;	  
+  }
+  release(&ptable.lock);
+ 
 
 
 	return;
