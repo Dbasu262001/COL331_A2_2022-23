@@ -598,14 +598,22 @@ int edf_list_count;
 
 //edf schedulabilty test
 int edf_schedulability(void){
-
-
-
+	struct proc* p;
+	float temp = 0.0;
+	acquire(&ptable.lock);
+	for(p = ptable.proc;p<&ptable.proc[NPROC];p++){
+		if(p->sched_policy ==0){
+			temp += (float)p->exec_time/(float)p->deadline;
+		}
+	}
+	release(&ptable.lock);
+	if(temp > 1.0) return -22;
 	return 0;
 }
 
 
 //RMS Schedulability test
+/*
 int rms_schedulability(void){
        struct proc *p;
        int n=0;
@@ -624,7 +632,7 @@ int rms_schedulability(void){
 
 	return 0;
 }
-
+*/
 
 void EDF_Scheduler(void){
 	struct proc *p;
@@ -643,7 +651,7 @@ void EDF_Scheduler(void){
  	return ;
 }
 
-
+/*
 void RMS_Scheduler(void){
       struct proc *hP;
   struct cpu *c = mycpu();
@@ -684,7 +692,7 @@ void RMS_Scheduler(void){
 	return;
 }
 
-
+*/
 
 
 
