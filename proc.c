@@ -8,7 +8,9 @@
 #include "stddef.h"
 #include "spinlock.h"
 //#include "math.h"
-int policy = -1;
+int edf_policy = -1;
+int rms_policy =-1;
+float U = 0.0 ; 
 //EDF struct
 struct process_list {
 	struct EDF_process_list   *next;
@@ -100,7 +102,7 @@ found:
   p->pid = nextpid++;
   p->deadline =-1;
   p->sched_policy =-1;
-  p->exec_time = 1;
+  p->exec_time = -1;
   p->elapsed_time =0;
 
   release(&ptable.lock);
@@ -337,55 +339,50 @@ wait(void)
 
 
 //MY implementation of this file
-
-//edf schedulabilty test
-int edf_schedulability(void){
-	struct proc* p;
-	float temp = 0.0;
-	acquire(&ptable.lock);
-	for(p = ptable.proc;p<&ptable.proc[NPROC];p++){
-		if(p->sched_policy ==0){
-			temp += (float)p->exec_time/(float)p->deadline;
-		}
-	}
-	release(&ptable.lock);
-	if(temp > 1.0) return -22;
-	return 0;
-}
-
-
 //RMS Schedulability test
 
 int rms_schedulability(void){
        struct proc *p;
        int n=0;
        float u=0.0;
-  acquire(&ptable.lock);
+  //acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->sched_policy == 1){
       u+=(float)p->exec_time/p->deadline;
       n++;
     }
   }
-  release(&ptable.lock);
+  //release(&ptable.lock);
 	float ut=0.0;//((float)n)*(pow(2.0,1/(double)n)-1.0);
 	if(u>ut) return -22; 
-
-
 	return 0;
 }
 
 ///Setting sched_policy
 int _sched_policy(int pid,int policy){
 	struct proc *p;
-	p = &ptable.proc[pid];
-	if(!p){
-		return -22;
-	}
-	p->sched_policy = policy;
+  acquire(&ptable.lock);
+	for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->pid ==pid ){
+        break;
+      }
+  }
 	if(policy==0){
-		return edf_schedulability();
+		float temp = U + ((float)p->exec_time/(float)p->deadline);
+    if(temp > 1.0){
+      release(&ptable.lock);
+      kill(pid);
+      return -22;
+    }
+    p->sched_policy = policy;
+    p->deadline=p->deadline+ticks;
+    U = temp;
+    release(&ptable.lock);
+    return 0;
+
 	}else{
+		rms_policy = policy;
+    release(&ptable.lock);
 		return rms_schedulability();
 	}	
 }
@@ -393,34 +390,54 @@ int _sched_policy(int pid,int policy){
 //Setting exec_time
 int _exec_time(int pid,int exec_time){
 	struct proc *p;
-	p = &ptable.proc[pid];
-	if(!p){
-		return -22;
-	}
+  acquire(&ptable.lock);
+	for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->pid ==pid ){
+        if(p->exec_time != -1) {
+          release(&ptable.lock);
+          return -22;
+        }
+        break;
+      }
+  }
 	p->exec_time = exec_time;
+  release(&ptable.lock);
 	return 0;
 }
 
 //Setting deadline
 int _deadline(int pid,int deadline){
 	struct proc *p;
-	p = &ptable.proc[pid];
-	if(p == NULL){
-		return -22;
-	}
+	acquire(&ptable.lock);
+	for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->pid ==pid ){
+        if(p->deadline != -1) {
+          release(&ptable.lock);
+          return -22;
+        }
+        break;
+      }
+  }
 	p->deadline = deadline;
+  release(&ptable.lock);
 	return 0;
 }
 
 //Setting rate for rms Scheduler
 int _rate(int pid,int rate){
 	struct proc *p;
-	p = &ptable.proc[pid];
-	if(!p ){
-		return -22;
-	}
+	acquire(&ptable.lock);
+	for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->pid ==pid ){
+        if(p->rate != -1) {
+          release(&ptable.lock);
+          return -22;
+        }
+        break;
+      }
+  }
 	p->rate = rate;
-	
+  release(&ptable.lock);
 	return 0;
 }
 
@@ -431,46 +448,42 @@ int _rate(int pid,int rate){
 
 
 //EDF_Scheduler
+/**/
 void EDF_Scheduler(void){
 	struct proc *p;
 	struct proc *p2;
-  	struct cpu *c = mycpu();
+  struct cpu *c = mycpu();
   	c->proc = 0;
 	
 	for(;;){
 		sti();
-		//int done =0;
-		int prev_deadline =-1;
-		acquire(&ptable.lock);
+		p2 = NULL;
 		for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       			if(p->state != RUNNABLE || p->sched_policy !=0){
         			continue;
         		}else{
-        			if(prev_deadline ==-1){
-        				prev_deadline = p->deadline;
+        			if(p2==NULL){
         				p2 = p;
         			}else if(p->deadline < p2->deadline) {
         				p2 = p;
         			}
         		}		
 		}
-		if(prev_deadline > 0){
+		if(p2 !=NULL){
 			c->proc = p2;
       			switchuvm(p2);
       			p2->state = RUNNING;
       			p2->elapsed_time++;
-
       			swtch(&(c->scheduler), p2->context);
       			switchkvm();
 
 		      // Process is done running for now.
 		      // It should have changed its p->state before coming back.
-      		c->proc = 0;
+      			c->proc = 0;
       		}
-      		
-		release(&ptable.lock);
-		if(prev_deadline ==-1){
-		policy = -1;
+		if(p2 ==NULL){
+			edf_policy = -1;
+			return ;
 			break;
       		}
 	}
@@ -524,6 +537,54 @@ void RMS_Scheduler(void){
 
 //End of my implementaion
 
+int updated()
+{
+  for(int i=0;i<NPROC;i++)
+  {
+    struct proc temp=ptable.proc[i];
+    if(temp.state != RUNNABLE) continue;
+    if(temp.sched_policy!=-1)
+    {
+      return temp.sched_policy;
+    }
+  }
+return -1;
+}
+
+
+
+int find_edp()
+{   int min=0;
+    int index=0;
+    int begin=0;
+  
+ for(int i=0;i<NPROC;i++)
+   {
+     struct proc temp=ptable.proc[i];
+     if(temp.state==RUNNABLE && temp.pid!=0 && temp.sched_policy==0)
+     {
+        if(begin==0){
+          begin=1;
+          index=i;
+          min = temp.deadline;
+          continue;
+        }
+        if(temp.deadline<min || (temp.deadline == min && ptable.proc[index].pid> temp.pid)){
+            min = temp.deadline;
+            index= i;
+         }
+     } 
+
+   }
+  return index;
+
+}
+
+
+
+
+
+
 
 
 void
@@ -535,20 +596,50 @@ scheduler(void)
   
   for(;;){
     // Enable interrupts on this processor.
-    while(policy ==0){
-    EDF_Scheduler();
-    }
     sti();
+  
+
+  
+    // if(edf_policy ==0){
+    //     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    //   			if(p->state != RUNNABLE || p->sched_policy !=0){
+    //     			continue;
+    //     		}else{
+    //     			if(p2==NULL){
+    //     				p2 = p;
+    //     			}else if(p->deadline < p2->deadline) {
+    //     				p2 = p;
+    //     			}
+    //     		}		
+		// }
+    // }
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
+    int status=updated();
 
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
+    if(status==-1) 
+     { 
+      for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+        if(p->state != RUNNABLE || p->sched_policy != -1)
+          continue; 
+
+        c->proc = p;
+        switchuvm(p);
+        p->state = RUNNING;
+
+        swtch(&(c->scheduler), p->context);
+        switchkvm();
+
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc = 0;
+      }
+     }
+    else if(status==0){
+      int ind = find_edp();
+      p=&ptable.proc[ind];
+      p->elapsed_time++;
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
@@ -560,7 +651,7 @@ scheduler(void)
       // It should have changed its p->state before coming back.
       c->proc = 0;
     }
-    release(&ptable.lock);
+  release(&ptable.lock);
 
   }
 }

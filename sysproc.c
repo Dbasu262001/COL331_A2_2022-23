@@ -101,7 +101,7 @@ int sys_sched_policy(void){
 	int pid,policy;
 	 if(argint(0, &pid) < 0 || argint(1,&policy))
 	 	return -22;
-	 cprintf("%s %d\n","policy : ",policy);
+	 //cprintf("%s %d\n","policy : ",policy);
 	return _sched_policy(pid,policy);
 }
 
@@ -110,7 +110,7 @@ int sys_exec_time(void){
 	int pid,exec_time;
 	if(argint(0, &pid) < 0 || argint(1,&exec_time))
 	 	return -22;
-	cprintf("%s %d\n","exec :",exec_time);
+	//cprintf("%s %d\n","exec :",exec_time);
 	return _exec_time(pid,exec_time);
 }
 
@@ -119,7 +119,7 @@ int sys_deadline(void){
 	int pid,deadline;
 	if(argint(0, &pid) < 0 || argint(1,&deadline))
 	 	return -22;
-	cprintf("%s %d\n","deadline : ",deadline);
+	//cprintf("%s %d\n","deadline : ",deadline);
 	return _deadline(pid,deadline);
 }
 
