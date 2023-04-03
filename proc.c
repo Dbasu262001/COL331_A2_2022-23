@@ -100,7 +100,7 @@ found:
   p->pid = nextpid++;
   p->deadline =-1;
   p->sched_policy =-1;
-  p->exec_time = 0;
+  p->exec_time = 1;
   p->elapsed_time =0;
 
   release(&ptable.lock);
@@ -458,6 +458,7 @@ void EDF_Scheduler(void){
 			c->proc = p2;
       			switchuvm(p2);
       			p2->state = RUNNING;
+      			p2->elapsed_time++;
 
       			swtch(&(c->scheduler), p2->context);
       			switchkvm();
