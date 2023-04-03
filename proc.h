@@ -54,8 +54,8 @@ struct proc {
   //Added attributes  
   int exec_time;
   int deadline;
-  int elapsed_time = 0;
-  int sched_policy = -1;
+  int elapsed_time;
+  int sched_policy;
   //For RMS
   int rate;
 };

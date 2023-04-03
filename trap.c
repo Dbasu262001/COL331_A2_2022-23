@@ -52,7 +52,8 @@ trap(struct trapframe *tf)
       acquire(&tickslock);
       ticks++;
       //Adding the time it has executed.
-      myproc()->elapsed_time++;
+      //if(myproc()->pid !=0)
+         //   myproc()->elapsed_time++;
       wakeup(&ticks);
       release(&tickslock);
     }
