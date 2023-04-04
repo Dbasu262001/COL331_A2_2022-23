@@ -11,6 +11,7 @@
 // int edf_policy = -1;
 // int rms_policy =-1;
 float U = 0.0 ; 
+float RMS_U = 0.0;
 //EDF struct
 struct process_list {
 	struct EDF_process_list   *next;
@@ -340,6 +341,10 @@ wait(void)
 
 
 //MY implementation of this file
+float power(float base, float exponent){
+
+  return base*exponent;
+}
 //RMS Schedulability test
 
 int rms_schedulability(void){
@@ -359,6 +364,7 @@ int rms_schedulability(void){
 	if(u>ut) return -22; 
 	return 0;
 }
+
 
 ///Setting sched_policy
 int _sched_policy(int pid,int policy){
@@ -543,10 +549,6 @@ int find_edp()
 
 }
 
-float power(float base, float exponent){
-
-  return base*exponent;
-}
 
 int find_rms_ind(){
   int weight = 0;
