@@ -8,8 +8,8 @@
 #include "stddef.h"
 #include "spinlock.h"
 //#include "math.h"
-int edf_policy = -1;
-int rms_policy =-1;
+// int edf_policy = -1;
+// int rms_policy =-1;
 float U = 0.0 ; 
 //EDF struct
 struct process_list {
@@ -104,6 +104,7 @@ found:
   p->sched_policy =-1;
   p->exec_time = -1;
   p->elapsed_time =0;
+  p->weight = 0;
 
   release(&ptable.lock);
 
@@ -342,6 +343,7 @@ wait(void)
 //RMS Schedulability test
 
 int rms_schedulability(void){
+  return 0;
        struct proc *p;
        int n=0;
        float u=0.0;
@@ -381,7 +383,8 @@ int _sched_policy(int pid,int policy){
     return 0;
 
 	}else{
-		rms_policy = policy;
+		//rms_policy = policy;
+    p->sched_policy = policy;
     release(&ptable.lock);
 		return rms_schedulability();
 	}	
@@ -437,58 +440,18 @@ int _rate(int pid,int rate){
       }
   }
 	p->rate = rate;
+  int wt = ((30 - rate)*3) / 29;
+  if(wt > 1 ){
+    p->weight = wt;
+  }else{
+    p->weight = 1;
+  }
   release(&ptable.lock);
 	return 0;
 }
 
 //process_list  *edf_list;
 //int edf_list_count;
-
-
-
-
-//EDF_Scheduler
-/**/
-void EDF_Scheduler(void){
-	struct proc *p;
-	struct proc *p2;
-  struct cpu *c = mycpu();
-  	c->proc = 0;
-	
-	for(;;){
-		sti();
-		p2 = NULL;
-		for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      			if(p->state != RUNNABLE || p->sched_policy !=0){
-        			continue;
-        		}else{
-        			if(p2==NULL){
-        				p2 = p;
-        			}else if(p->deadline < p2->deadline) {
-        				p2 = p;
-        			}
-        		}		
-		}
-		if(p2 !=NULL){
-			c->proc = p2;
-      			switchuvm(p2);
-      			p2->state = RUNNING;
-      			p2->elapsed_time++;
-      			swtch(&(c->scheduler), p2->context);
-      			switchkvm();
-
-		      // Process is done running for now.
-		      // It should have changed its p->state before coming back.
-      			c->proc = 0;
-      		}
-		if(p2 ==NULL){
-			edf_policy = -1;
-			return ;
-			break;
-      		}
-	}
- 	return ;
-}
 
 /*
 void RMS_Scheduler(void){
@@ -580,8 +543,36 @@ int find_edp()
 
 }
 
+float power(float base, float exponent){
 
+  return base*exponent;
+}
 
+int find_rms_ind(){
+  int weight = 0;
+  int index = 0;
+  int start = 0;
+  for(int i=0;i<NPROC;i++)
+   {
+     struct proc temp=ptable.proc[i];
+     if(temp.state==RUNNABLE && temp.pid!=0 && temp.sched_policy==1)
+     {
+        if(start==0){
+          start=1;
+          index=i;
+          weight = temp.weight;
+          continue;
+        }
+        if(temp.weight< weight || (temp.weight == weight && ptable.proc[index].pid> temp.pid)){
+            weight = temp.weight;
+            index= i;
+         }
+     } 
+
+   }
+  return index;
+
+}
 
 
 
@@ -618,8 +609,7 @@ scheduler(void)
     acquire(&ptable.lock);
     int status=updated();
 
-    if(status==-1) 
-     { 
+    if(status==-1){ 
       for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
         if(p->state != RUNNABLE || p->sched_policy != -1)
           continue; 
@@ -635,8 +625,7 @@ scheduler(void)
         // It should have changed its p->state before coming back.
         c->proc = 0;
       }
-     }
-    else if(status==0){
+    }else if(status==0){
       int ind = find_edp();
       p=&ptable.proc[ind];
       p->elapsed_time++;
@@ -649,6 +638,17 @@ scheduler(void)
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.
+      c->proc = 0;
+    }else if(status == 1){
+      int rm_ind = find_rms_ind();
+      p = &ptable.proc[rm_ind];
+      p->elapsed_time++;
+      c->proc = p;
+      switchuvm(p);
+      p->state = RUNNING;
+
+      swtch(&(c->scheduler), p->context);
+      switchkvm();
       c->proc = 0;
     }
   release(&ptable.lock);

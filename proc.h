@@ -58,6 +58,7 @@ struct proc {
   int sched_policy;
   //For RMS
   int rate;
+  int weight;
 };
 
 // Process memory is laid out contiguously, low addresses first:
