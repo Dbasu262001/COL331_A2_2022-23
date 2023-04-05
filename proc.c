@@ -537,7 +537,7 @@ int updated()
   return -1;
 }
 
-int find_edp()
+int find_edf_ind()
 {
   int min = 0;
   int index = 0;
@@ -642,7 +642,7 @@ void scheduler(void)
     }
     else if (status == 0)
     {
-      int ind = find_edp();
+      int ind = find_edf_ind();
       p = &ptable.proc[ind];
       p->elapsed_time++;
       c->proc = p;
