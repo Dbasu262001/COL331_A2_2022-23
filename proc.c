@@ -352,7 +352,12 @@ int wait(void)
 //   - eventually that process transfers control
 //       via swtch back to the scheduler.
 
+
+
 // MY implementation of this file
+
+
+//help power function computes a^n where n is integer, a is a real number(!=0)
 double help_power(double base, int exponent)
 {
   if (exponent == 0){
@@ -368,20 +373,20 @@ double help_power(double base, int exponent)
   return temp;
 }
 
+
+//powr function computes  a^(1/n)  where n is integer, a is a real number(!=0)
 double powr(double base, int inv_exponent)
 {
   double upper_bound = base;
   double lower_bound = 0.0;
   //int te = (int)(base*100);
   //cprintf("%s %d\n","base: ",te);
-    //cprintf("%s %d\n","exponent : ",inv_exponent);
+  //cprintf("%s %d\n","exponent : ",inv_exponent);
   while (upper_bound - lower_bound > 0.0000001)
   {   
 
     double mid = (upper_bound + lower_bound) / (double)2;
     double temp = help_power(mid, inv_exponent);
-    //cprintf("%s %d\n","rmsbound 01: ",ty);
-
     if (temp > base)
     {
       upper_bound = mid;
@@ -522,7 +527,7 @@ int _rate(int pid, int rate)
 // int edf_list_count;
 
 
-int updated()
+int get_policy()
 {
   for (int i = 0; i < NPROC; i++)
   {
@@ -541,16 +546,16 @@ int find_edf_ind()
 {
   int min = 0;
   int index = 0;
-  int begin = 0;
+  int start = 0;
 
   for (int i = 0; i < NPROC; i++)
   {
     struct proc temp = ptable.proc[i];
     if (temp.state == RUNNABLE && temp.pid != 0 && temp.sched_policy == 0)
     {
-      if (begin == 0)
+      if (start == 0)
       {
-        begin = 1;
+        start = 1;
         index = i;
         min = temp.deadline + temp.arrival_time;
         continue;
@@ -619,7 +624,7 @@ void scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    int status = updated();
+    int status = get_policy();
 
     if (status == -1)
     {
