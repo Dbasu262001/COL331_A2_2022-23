@@ -437,8 +437,6 @@ int _sched_policy(int pid, int policy)
     p->arrival_time = ticks;
     n_rms_proc++;
     RMS_U = t1;
-    cprintf("pid =%d , weight = %d, rate = %d\n",p->pid,p->weight,p->rate);
-
     release(&ptable.lock);
     return 0;
   }
