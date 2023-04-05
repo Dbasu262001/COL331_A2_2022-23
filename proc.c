@@ -624,9 +624,9 @@ void scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    int status = get_policy();
+    int schedule_policy = get_policy();
 
-    if (status == -1)
+    if (schedule_policy == -1)
     {
       for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
       {
@@ -645,7 +645,7 @@ void scheduler(void)
         c->proc = 0;
       }
     }
-    else if (status == 0)
+    else if (schedule_policy == 0)
     {
       int ind = find_edf_ind();
       p = &ptable.proc[ind];
@@ -661,7 +661,7 @@ void scheduler(void)
       // It should have changed its p->state before coming back.
       c->proc = 0;
     }
-    else if (status == 1)
+    else if (schedule_policy == 1)
     {
       int rm_ind = find_rms_ind();
       p = &ptable.proc[rm_ind];
