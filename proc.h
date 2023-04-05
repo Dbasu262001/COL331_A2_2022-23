@@ -50,9 +50,9 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
   
-  
   //Added attributes  
   int exec_time;
+  int arrival_time;
   int deadline;
   int elapsed_time;
   int sched_policy;

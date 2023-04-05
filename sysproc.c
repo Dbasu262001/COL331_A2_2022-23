@@ -99,7 +99,7 @@ sys_uptime(void)
 ///Setting sched_policy
 int sys_sched_policy(void){
 	int pid,policy;
-	 if(argint(0, &pid) < 0 || argint(1,&policy))
+	 if(argint(0, &pid) < 0 || argint(1,&policy)<0)
 	 	return -22;
 	 //cprintf("%s %d\n","policy : ",policy);
 	return _sched_policy(pid,policy);
@@ -108,7 +108,7 @@ int sys_sched_policy(void){
 //Setting exec_time
 int sys_exec_time(void){
 	int pid,exec_time;
-	if(argint(0, &pid) < 0 || argint(1,&exec_time))
+	if(argint(0, &pid) < 0 || argint(1,&exec_time)<0)
 	 	return -22;
 	//cprintf("%s %d\n","exec :",exec_time);
 	return _exec_time(pid,exec_time);
@@ -117,7 +117,7 @@ int sys_exec_time(void){
 //Setting deadline
 int sys_deadline(void){
 	int pid,deadline;
-	if(argint(0, &pid) < 0 || argint(1,&deadline))
+	if(argint(0, &pid) < 0 || argint(1,&deadline)<0)
 	 	return -22;
 	//cprintf("%s %d\n","deadline : ",deadline);
 	return _deadline(pid,deadline);
@@ -126,7 +126,7 @@ int sys_deadline(void){
 //Setting rate for rms Scheduler
 int sys_rate(void){
 	int pid,rate;
-	if(argint(0, &pid) < 0 || argint(1,&rate))
+	if(argint(0, &pid) < 0 || argint(1,&rate)<0)
 	 	return -22;
 	return _rate(pid,rate);
 }
